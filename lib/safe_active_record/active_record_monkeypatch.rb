@@ -17,9 +17,16 @@ require "safe_active_record/safe_type"
 require "safe_active_record/safe_query_manager"
 
 module SafeActiveRecord
+
+    # Check the type of arguments.
+    # It accepts String type only for invocations internal to Active Record.
     def self.check_arg(arg, idx, which_caller=1)
       case arg
-      when SafeActiveRecord::UncheckedString # UncheckedString type needs to preceed String due to membership operation
+      # SqlLiteral, UncheckedString and RiskilyAssumeTrustedString are all subclasses of String, so they need to proceed String.
+      when Arel::Nodes::SqlLiteral, SafeActiveRecord::UncheckedString
+        # No-op.
+        # SqlLiteral is the return type of Arel.sql, considered safe as we are decorating Arel.sql.
+        # UncheckedString is considered safe here, but warrants code reivew.
       when SafeActiveRecord::RiskilyAssumeTrustedString
         # The class methods on the Relation object `delegate` to the scope object and skews the call stack by 1.
         which_caller += 1 if caller[which_caller].include?("/querying.rb")
@@ -29,6 +36,9 @@ module SafeActiveRecord
       when String
         # The class method on the Relation object `delegate`s to the scope object and skews the call stack by 1.
         which_caller += 1 if caller[which_caller].include?("/querying.rb")
+
+        # Early return for calls within any GEM
+        return arg if caller_locations[which_caller].absolute_path.start_with?(Gem.dir)
 
         err = "Warning: untrusted String type detected by SafeActiveRecord in argument indexed #{idx} (0-based) when calling `#{caller_locations.first.base_label}` at #{caller[which_caller]}. Please rewrite the argument with type TrustedSymbol."
       when SafeActiveRecord::TrustedSymbol
@@ -128,20 +138,12 @@ module Arel
   # and normally should not be instantiated directly. That said, users should
   # take an one-off effort to rewrite SqlLiteral creation through Arel.sql if
   # any.
+  # Arel.sql is a method of its eigenclass.
   class << self
     alias_method :safe_ar_original_sql, :sql
 
-    @active_record_dir = nil
-
     # sql takes in arguments of TrustedSymbol or UncheckedString type.
-    # It accepts String type only for invocations internal to Active Record.
     def sql(raw_sql)
-      # It assumes here the decorated method safe_ar_original_sql is the orginal and hasn't been decorated by others
-      @active_record_dir ||=  File.dirname(File.realpath(method(:safe_ar_original_sql).source_location.first)) +"/"
-
-      # Invocations internal to Active Record
-      return safe_ar_original_sql(raw_sql) if caller_locations(1..1).first.absolute_path.start_with?(@active_record_dir)
-
       raw_sql = SafeActiveRecord.check_arg(raw_sql, 0)
 
       safe_ar_original_sql(raw_sql)

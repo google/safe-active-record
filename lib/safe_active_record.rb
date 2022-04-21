@@ -14,6 +14,7 @@
 
 require "safe_active_record/safe_query_manager"
 require "safe_active_record/active_record_monkeypatch"
+require "safe_active_record/load"
 require "safe_active_record/reporter"
 
 module SafeActiveRecord
@@ -21,8 +22,10 @@ module SafeActiveRecord
   def self.activate!(options={})
     # make sure it has been instantiated
     mgr = safe_query_manager
-    lock_module
     mgr.activate! options
+    # Dynamically apply the decoraters only when needed to boost performance
+    apply_load_patch mgr if mgr.intercept_load?
+    lock_module
   end
 
   # Set the callback Proc to report violation of safe type usage.
@@ -30,4 +33,5 @@ module SafeActiveRecord
   def self.set_report_handler(handler)
     @@report_handler = handler
   end
+
 end

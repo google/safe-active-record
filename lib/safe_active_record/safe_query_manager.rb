@@ -19,11 +19,12 @@ module SafeActiveRecord
 
   @@safe_query_manager = nil
   class SafeQueryManager
-    OPTIONS = [:safe_query_mode, :dry_run]
+    OPTIONS = [:safe_query_mode, :dry_run, :intercept_load]
 
     DEFAULT_OPTIONS = {
       safe_query_mode: :strict,
-      dry_run: false
+      dry_run: false,
+      intercept_load: false
     }
 
     def initialize
@@ -50,12 +51,14 @@ module SafeActiveRecord
         "dry_run parameter only takes true/false value"
         ) unless [true, false].include? @options[:dry_run]
 
+      raise ArgumentError.new (
+        "intercept_load parameter only takes true/false value"
+        ) unless [true, false].include? @options[:intercept_load]
+
       self.add_safe_queries Symbol.all_symbols
 
 
-      if @options[:safe_query_mode] == :strict
-        @safe_queries.freeze
-      end
+      @safe_queries.freeze unless @options[:intercept_load]
 
       @activated = true
 
@@ -69,26 +72,25 @@ module SafeActiveRecord
       @options[:safe_query_mode] == :lax
     end
 
-
     def activated?
       @activated
     end
-
 
     def dry_run?
       @options[:dry_run]
     end
 
+    def intercept_load?
+      @options[:intercept_load]
+    end
 
     def add_safe_queries(queries)
       @safe_queries.merge queries
     end
 
-
     def safe_query?(query)
       @safe_queries.include? query
     end
-
   end
 
   def self.safe_query_manager=(mgr)
