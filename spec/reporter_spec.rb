@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "active_record"
-require "safe_active_record/active_record_monkeypatch"
-require "safe_active_record/safe_type"
-require "safe_active_record/reporter"
+require 'active_record'
+require 'safe_active_record/active_record_monkeypatch'
+require 'safe_active_record/safe_type'
+require 'safe_active_record/reporter'
 
-
-describe "Reporter" do
-  context "default report handler" do
-    it "outputs to stderr" do
-      expect { SafeActiveRecord.report_violation(
-        StandardError.new("Test reporter")) }.
-        to output("Test reporter\n").to_stderr
+describe 'Reporter' do
+  context 'default report handler' do
+    it 'outputs to stderr' do
+      expect do
+        SafeActiveRecord.report_violation(
+          StandardError.new('Test reporter')
+        )
+      end
+        .to output("Test reporter\n").to_stderr
     end
   end
 end
-

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +16,11 @@
 
 module SafeActiveRecord
   # Default handler.
-  @@report_handler = Proc.new do |exception|
+  @@report_handler = proc do |exception|
     warn(exception)
   end
 
   def self.report_violation(exception)
-    @@report_handler.call(exception) if @@report_handler
+    @@report_handler&.call(exception)
   end
 end

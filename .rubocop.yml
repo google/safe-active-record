@@ -1,0 +1,39 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  NewCops: enable
+
+Style/Documentation:
+  Exclude:
+    - 'lib/safe_active_record/active_record_monkeypatch.rb'
+
+Style/Documentation:
+  Exclude:
+    - 'spec/**/*'
+
+Lint/SymbolConversion:
+  Exclude:
+    - 'spec/**/*'
+
+Metrics:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+Lint/UselessAssignment:
+  Enabled: false
+
+Lint/MissingSuper:
+  Exclude:
+    - 'lib/safe_active_record/safe_type.rb'
+
+Style/ClassVars:
+  Exclude:
+    - 'lib/safe_active_record/reporter.rb'
+    - 'lib/safe_active_record.rb'
+    - 'lib/safe_active_record/safe_query_manager.rb'
+
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - 'spec/spec_helper.rb'

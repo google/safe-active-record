@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +14,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "safe_active_record/safe_type"
+require 'safe_active_record/safe_type'
 
 describe SafeActiveRecord::TrustedSymbol do
   context "SafeQueryManager hasn't been activated" do
     before(:all) do
       SafeActiveRecord.safe_query_manager = SafeActiveRecord::SafeQueryManager.new
     end
-    it "raise exception due to SafeQueryManager not activated" do
-      expect { SafeActiveRecord::TrustedSymbol.new("a string") }.to raise_error(StandardError)
-      expect { SafeActiveRecord::TrustedSymbol.new(:"a static symbol") }.to raise_error(StandardError)
-      expect { SafeActiveRecord::TrustedSymbol.new("a dynamic symbol".to_sym) }.to raise_error(StandardError)
+    it 'raise exception due to SafeQueryManager not activated' do
+      expect { SafeActiveRecord::TrustedSymbol.new('a string') }.to raise_error(StandardError)
+      expect { SafeActiveRecord::TrustedSymbol.new(:'a static symbol') }.to raise_error(StandardError)
+      expect { SafeActiveRecord::TrustedSymbol.new('a dynamic symbol'.to_sym) }.to raise_error(StandardError)
     end
   end
 
-  context "SafeQueryManager has been activated" do
+  context 'SafeQueryManager has been activated' do
     before(:all) do
       SafeActiveRecord.safe_query_manager = SafeActiveRecord::SafeQueryManager.new
       SafeActiveRecord.safe_query_manager.activate!
     end
     it "doesn't take String type input" do
-      expect { SafeActiveRecord::TrustedSymbol.new("a string") }.to raise_error(ArgumentError)
+      expect { SafeActiveRecord::TrustedSymbol.new('a string') }.to raise_error(ArgumentError)
     end
 
-     it "allows static symbols" do
-       s = SafeActiveRecord::TrustedSymbol.new(:"a static symbol 2")
-       expect(s.raw_str).to be == "a static symbol 2"
-     end
+    it 'allows static symbols' do
+      s = SafeActiveRecord::TrustedSymbol.new(:'a static symbol 2')
+      expect(s.raw_str).to be == 'a static symbol 2'
+    end
 
-    it "denies dynamic symbols" do
-       expect { SafeActiveRecord::TrustedSymbol.new("a dynamic symbol 2".to_sym) }.to raise_error(ArgumentError)
-     end
+    it 'denies dynamic symbols' do
+      expect { SafeActiveRecord::TrustedSymbol.new('a dynamic symbol 2'.to_sym) }.to raise_error(ArgumentError)
+    end
   end
 end
 

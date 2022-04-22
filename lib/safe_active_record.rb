@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "safe_active_record/safe_query_manager"
-require "safe_active_record/active_record_monkeypatch"
-require "safe_active_record/load"
-require "safe_active_record/reporter"
+require 'safe_active_record/safe_query_manager'
+require 'safe_active_record/active_record_monkeypatch'
+require 'safe_active_record/load'
+require 'safe_active_record/reporter'
 
 module SafeActiveRecord
-
-  def self.activate!(options={})
+  def self.activate!(options = {})
     # make sure it has been instantiated
     mgr = safe_query_manager
     mgr.activate! options
@@ -30,8 +31,7 @@ module SafeActiveRecord
 
   # Set the callback Proc to report violation of safe type usage.
   # `handler` takes one arguement, the exception.
-  def self.set_report_handler(handler)
+  def self.report_handler(handler)
     @@report_handler = handler
   end
-
 end
