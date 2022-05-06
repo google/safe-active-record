@@ -1,9 +1,12 @@
 # Safe Active Record
 
-A security middleware to defend against SQLi in Ruby Active Record.
+A security middleware to defend against
+[SQL injection](https://en.wikipedia.org/wiki/SQL_injection) in Ruby on Rails
+Active Record.
 
-This middleware decorates unsafe Active Record query APIs to enforce SQL strings
-created from secure-by-construction types.
+This middleware decorates
+[unsafe Active Record query APIs](https://rails-sqli.org/) to enforce use of
+SQL statements created from secure-by-construction types.
 
 ## Secure-by-construction
 
@@ -100,3 +103,7 @@ symbols being treated as trusted in the worst case. It's only a compatible mode
 to support local development that truns off eager load to expedite development
 velocity, and it should never be enabled for production where concurrency is
 controllable by a malicious user.
+
+## Disclaimer
+
+This is not an officially supported Google product.
