@@ -18,6 +18,14 @@ require 'safe_active_record/safe_query_manager'
 
 module SafeActiveRecord
   def self.apply_load_patch(safe_query_mgr)
+    # intercept_load should not be used in production
+    if defined?(::Rails.env) && defined?(::Rails.logger.warn) && ::Rails.env.production?
+      ::Rails.logger.warn(
+        'SafeActiveRecord intercept_load should not be used in production, as this could cause significant performance issues, ' \
+        'consider enabling eager_load and rake_eager_load instead.'
+      )
+    end
+
     apply_patch = proc do |original_method|
       unless Kernel.private_method_defined? :"safe_ar_original_#{original_method}"
         Kernel.module_eval do
