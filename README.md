@@ -106,7 +106,7 @@ symbols being treated as trusted in the worst case. It's only a compatible mode
 to support local development that truns off eager load to expedite development
 velocity, and it should never be enabled for production where concurrency is
 controllable by a malicious user.
-* When this mode is enabled, safeActiveRecord is recalculating the symbol table often instead of at initial load, which significantly impacts performance.
+* When this mode is enabled, SafeActiveRecord is recalculating the symbol table often instead of at initial load, which significantly impacts performance.
 
 For safeActiveRecord to function properly when `intercept_load` is disabled, `eager_load` should be enabled, which is anyway a [best practice](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#eager-loading) in Rails for production environments. In most cases `eager_load` is enabled by default, but there are some exceptions such as Rake tasks.
 
