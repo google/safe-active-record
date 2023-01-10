@@ -50,18 +50,20 @@ safe symbols can be taken. In a rails app, it can be done at
 
 The method takes in a hash into which a few options can be passed:
 
-*   `safe_query_mode`: `:strict` or `:lax`; `:lax` mode allows usage of
-    `RiskilyAssumeTrustedString` type.
-*   `dry_run`: true/false, default to false; when set to true, only warnings
-    will be emitted but otherwise an exception will be raised when unconforming
-    types are passed in.
-*   `intercept_load`: true/false, default to false; when set to true,
-    `require`/`load`/`require_relative` will be intercepted in order to
-    calculate the delta of symbols created during new Ruby source code loading,
-    and add them to the trusted symbol set. This is to compensate for use cases
-    when eager_load is turned off, typically during local development.
+* `safe_query_mode`: `:strict` or `:lax`; `:lax` mode allows usage of
+  `RiskilyAssumeTrustedString` type.
+* `dry_run`: true/false, default to false; when set to true, only warnings
+  will be emitted but otherwise an exception will be raised when unconforming
+  types are passed in.
+* `intercept_load`: true/false, default to false; when set to true,
+  `require`/`load`/`require_relative` will be intercepted in order to
+  calculate the delta of symbols created during new Ruby source code loading,
+  and add them to the trusted symbol set. This is to compensate for use cases
+  when eager_load is turned off, typically during local development.
 
-    **WARNING**: make sure `intercept_load` is disabled in all production systems including Rake tasks. See [limitation section](#limitation) for more details.
+    **WARNING**: make sure `intercept_load` is disabled in all production
+    systems including Rake tasks. See [limitation section](#limitation)
+    for more details.
 
     For instance:
 
@@ -75,14 +77,14 @@ The method takes in a hash into which a few options can be passed:
 
 Three new types are considered safe types under the new contract:
 
-*   TrustedSymbol: the secure-by-construction type that takes in a safe symbol.
-    Most SQL strings should be rewritten to this type.
-*   UncheckedString: escaping type that assumes the input is fully trusted. In
-    very few cases, SQL query can't be constructed from string literals and the
-    usage of such a type should raise a signal for security code review.
-*   RiskilyAssumeTrustedString: similar to UncheckedString but should only be
-    used during adoption of SafeActiveRecord when certain rewriting takes
-    substantial efforts.
+* TrustedSymbol: the secure-by-construction type that takes in a safe symbol.
+  Most SQL strings should be rewritten to this type.
+* UncheckedString: escaping type that assumes the input is fully trusted. In
+  very few cases, SQL query can't be constructed from string literals and the
+  usage of such a type should raise a signal for security code review.
+* RiskilyAssumeTrustedString: similar to UncheckedString but should only be
+  used during adoption of SafeActiveRecord when certain rewriting takes
+  substantial efforts.
 
     An old SQL
 
@@ -102,17 +104,24 @@ Three new types are considered safe types under the new contract:
 `intercept_load` should be disabled in production system for the following reasons:
 
 * This mode is unfortunately not thread safe and could lead to unsafe
-symbols being treated as trusted in the worst case. It's only a compatible mode
-to support local development that truns off eager load to expedite development
-velocity, and it should never be enabled for production where concurrency is
-controllable by a malicious user.
-* When this mode is enabled, SafeActiveRecord is recalculating the symbol table often instead of at initial load, which significantly impacts performance.
+  symbols being treated as trusted in the worst case. It's only a compatible mode
+  to support local development that truns off eager load to expedite development
+  velocity, and it should never be enabled for production where concurrency is
+  controllable by a malicious user.
+* When this mode is enabled, SafeActiveRecord is recalculating the symbol table
+  often instead of at initial load, which significantly impacts performance.
 
-For safeActiveRecord to function properly when `intercept_load` is disabled, `eager_load` should be enabled, which is anyway a [best practice](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#eager-loading) in Rails for production environments. In most cases `eager_load` is enabled by default, but there are some exceptions such as Rake tasks.
+For safeActiveRecord to function properly when `intercept_load` is disabled,
+`eager_load` should be enabled, which is anyway a [best practice](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#eager-loading)
+in Rails for production environments. In most cases `eager_load` is enabled by
+default, but there are some exceptions such as Rake tasks.
 
 ### Rake tasks
 
-Rake tasks do not eager load in older versions of Rails. In Rails 6.1 and above, a `rake_eager_load` configuration has been introduced, but is disabled by default. To enable eager load for Rake task, switch `rake_eager_load` to true.
+Rake tasks do not eager load in older versions of Rails. In Rails 6.1 and
+above, a `rake_eager_load` configuration has been introduced, but is disabled
+by default. To enable eager load for Rake task, switch `rake_eager_load` to
+true.
 
 For instance:
 
@@ -120,7 +129,8 @@ For instance:
 config.rake_eager_load = true
 ```
 
-Note that many Ruby frameworks such as [Resque](https://github.com/resque/resque#introduction) are using Rake tasks under the hood.
+Note that many Ruby frameworks such as [Resque](https://github.com/resque/resque#introduction)
+are using Rake tasks under the hood.
 
 ## Disclaimer
 
