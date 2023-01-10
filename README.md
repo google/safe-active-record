@@ -111,7 +111,7 @@ Three new types are considered safe types under the new contract:
 * When this mode is enabled, SafeActiveRecord is recalculating the symbol table
   often instead of at initial load, which significantly impacts performance.
 
-For safeActiveRecord to function properly when `intercept_load` is disabled,
+For SafeActiveRecord to function properly when `intercept_load` is disabled,
 `eager_load` should be enabled, which is anyway a [best practice](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#eager-loading)
 in Rails for production environments. In most cases `eager_load` is enabled by
 default, but there are some exceptions such as Rake tasks.
