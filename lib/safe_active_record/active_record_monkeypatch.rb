@@ -42,7 +42,8 @@ module SafeActiveRecord
       which_caller += 1 if caller[which_caller].include?('/querying.rb')
 
       # Early return for calls within any GEM
-      return arg if caller_locations[which_caller].absolute_path.start_with?(Gem.dir)
+      caller_location_path = caller_locations[which_caller].absolute_path || caller_locations[which_caller].path
+      return arg if !caller_location_path.nil? && caller_location_path.start_with?(Gem.dir)
 
       err = "Warning: untrusted String type detected by SafeActiveRecord in argument indexed #{idx} (0-based) when " \
             "calling `#{caller_locations.first.base_label}` at #{caller[which_caller]}. Please rewrite the argument " \
