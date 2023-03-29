@@ -28,8 +28,11 @@ module SafeActiveRecord
       raise StandardErrors, "SafeQueryManager must be activated before instantiation of #{self.class.name}!" unless mgr.activated?
 
       unless mgr.safe_query?(str)
-        raise ArgumentError, "The symbol isn't found trusted. It could be that it is created dynamically from a string," \
-                             "or the source where the caller belongs to isn't eager loaded."
+        exception = ArgumentError.new(
+          "The symbol isn't found trusted when calling `#{caller_locations.first}`. It could be that it is created " \
+          "dynamically from a string, or the source where the caller belongs to isn't eager loaded.")
+        SafeActiveRecord.report_violation(exception)
+        raise exception unless mgr.dry_run?
       end
 
       @raw_str = str.to_s

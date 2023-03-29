@@ -53,7 +53,7 @@ The method takes in a hash into which a few options can be passed:
 * `safe_query_mode`: `:strict` or `:lax`; `:lax` mode allows usage of
   `RiskilyAssumeTrustedString` type.
 * `dry_run`: true/false, default to false; when set to true, only warnings
-  will be emitted but otherwise an exception will be raised when unconforming
+  will be emitted, an exception will not be raised when unconforming
   types are passed in.
 * `intercept_load`: true/false, default to false; when set to true,
   `require`/`load`/`require_relative` will be intercepted in order to
