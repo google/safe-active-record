@@ -56,9 +56,11 @@ module SafeActiveRecord
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
-              delta = Symbol.all_symbols - pre_symbols
-              safe_query_mgr.add_safe_queries delta
-              SafeActiveRecord.visit(args)
+              post_symbols = Symbol.all_symbols
+              if post_symbols.size != pre_symbols.size
+                safe_query_mgr.add_safe_queries post_symbols[pre_symbols.size...]
+                SafeActiveRecord.visit(args)
+              end
             else
               result = method(:"safe_ar_original_#{original_method}").call(*args)
             end
