@@ -15,8 +15,25 @@
 # limitations under the License.
 
 require 'safe_active_record/safe_query_manager'
+require 'set'
 
 module SafeActiveRecord
+  @@visited = Set.new
+
+  def self.skip_load(args)
+    if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
+      # We don't need to load symbols in Gem since we don't enforce SAR inside gems
+      return true if @@visited.include?(args[0]) || args[0].start_with?(Gem.dir)
+    end
+    return false
+  end
+
+  def self.visit(args)
+    if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
+      @@visited.add(args[0])
+    end
+  end
+
   def self.apply_load_patch(safe_query_mgr)
     # intercept_load should not be used in production
     if defined?(::Rails.env) && defined?(::Rails.logger.warn) && ::Rails.env.production?
@@ -34,13 +51,14 @@ module SafeActiveRecord
           undef_method original_method
 
           define_method original_method do |*args|
-            if safe_query_mgr.activated? && safe_query_mgr.intercept_load?
+            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_load(args)
               pre_symbols = Symbol.all_symbols
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
               delta = Symbol.all_symbols - pre_symbols
               safe_query_mgr.add_safe_queries delta
+              SafeActiveRecord.visit(args)
             else
               result = method(:"safe_ar_original_#{original_method}").call(*args)
             end
