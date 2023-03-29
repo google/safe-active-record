@@ -20,7 +20,7 @@ require 'set'
 module SafeActiveRecord
   @@visited = Set.new
 
-  def self.skip_load(args)
+  def self.skip_symbols_diff(args)
     if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
       # We don't need to load symbols in Gem since we don't enforce SAR inside gems
       return true if @@visited.include?(args[0]) || args[0].start_with?(Gem.dir)
@@ -51,16 +51,14 @@ module SafeActiveRecord
           undef_method original_method
 
           define_method original_method do |*args|
-            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_load(args)
+            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(args)
               pre_symbols = Symbol.all_symbols
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
-              post_symbols = Symbol.all_symbols
-              if post_symbols.size != pre_symbols.size
-                safe_query_mgr.add_safe_queries post_symbols[pre_symbols.size...]
-                SafeActiveRecord.visit(args)
-              end
+              delta = Symbol.all_symbols - pre_symbols
+              safe_query_mgr.add_safe_queries delta
+              SafeActiveRecord.visit(args)
             else
               result = method(:"safe_ar_original_#{original_method}").call(*args)
             end
