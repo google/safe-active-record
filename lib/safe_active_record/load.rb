@@ -20,18 +20,31 @@ require 'set'
 module SafeActiveRecord
   @@visited = Set.new
 
-  def self.skip_symbols_diff(args)
+  def self.init_visited()
+    @@visited.merge($LOADED_FEATURES)
+  end
+
+  def self.resolve_feature_path(args)
     if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
-      # We don't need to load symbols in Gem since we don't enforce SAR inside gems
-      return true if @@visited.include?(args[0]) || args[0].start_with?(Gem.dir)
+      rfpath = $LOAD_PATH.resolve_feature_path(args[0])
+      if !rfpath.nil? && rfpath.size == 2 && rfpath[1].instance_of?(String)
+        return rfpath[1]
+      end
+      return args[0]
     end
+    return nil
+  end
+
+  def self.skip_symbols_diff(path, method)
+    # load is mainly used for development to reload code without restarting the app
+    return false if method == "load"
+    return true if !path.nil? && (@@visited.include?(path) || path.start_with?(Gem.dir))
     return false
   end
 
-  def self.visit(args)
-    if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
-      @@visited.add(args[0])
-    end
+  def self.visit(path, method)
+    return if method == "load"
+    @@visited.add(path) unless path.nil?
   end
 
   def self.apply_load_patch(safe_query_mgr)
@@ -51,14 +64,15 @@ module SafeActiveRecord
           undef_method original_method
 
           define_method original_method do |*args|
-            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(args)
+            rfpath = SafeActiveRecord.resolve_feature_path(args)
+            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(rfpath, "#{original_method}")
               pre_symbols = Symbol.all_symbols
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
               delta = Symbol.all_symbols - pre_symbols
               safe_query_mgr.add_safe_queries delta
-              SafeActiveRecord.visit(args)
+              SafeActiveRecord.visit(rfpath, "#{original_method}")
             else
               result = method(:"safe_ar_original_#{original_method}").call(*args)
             end
