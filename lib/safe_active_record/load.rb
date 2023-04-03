@@ -20,6 +20,10 @@ require 'set'
 module SafeActiveRecord
   @@visited = Set.new
 
+  def self.init_visited()
+    @@visited.merge($LOADED_FEATURES) if $LOADED_FEATURES.is_a? Enumerable
+  end
+
   def self.skip_symbols_diff(args, method)
     # load is mainly used for development to reload code without restarting the app
     return false if method == "load"
@@ -54,12 +58,18 @@ module SafeActiveRecord
 
           define_method original_method do |*args|
             if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(args, "#{original_method}")
-              pre_symbols_len = Symbol.all_symbols.size
+              pre_symbols = Symbol.all_symbols
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
               if result
-                safe_query_mgr.add_safe_queries Symbol.all_symbols[pre_symbols_len...]
+                post_symbols = Symbol.all_symbols
+                if post_symbols[pre_symbols.size - 1] == pre_symbols[-1]
+                  delta = post_symbols[pre_symbols.size...]
+                else
+                  delta = post_symbols - pre_symbols
+                end
+                safe_query_mgr.add_safe_queries delta if delta.is_a? Enumerable
               end
               SafeActiveRecord.visit(args, "#{original_method}")
             else
