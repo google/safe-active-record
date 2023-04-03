@@ -25,10 +25,18 @@ module SafeActiveRecord
   end
 
   def self.skip_symbols_diff(args, method)
-    # load is mainly used for development to reload code without restarting the app
-    return false if method == "load"
     if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
-      return true if (@@visited.include?(args[0]) || args[0].start_with?(Gem.dir))
+      # Load is mainly used for development to reload code without restarting the app
+      return true if @@visited.include?(args[0]) && method == "require"
+
+      # We don't need to process gems as SAR ignore SQL statements made from them
+      return true if args[0].start_with?(Gem.dir)
+
+      # A gem is less likely to call the app source code without using absolute paths
+      caller_locations_path = caller_locations[1].absolute_path || caller_locations[2].path
+      if (caller_locations_path.start_with?(Gem.dir) && !args[0].start_with?("/"))
+        return true
+      end
     end
     return false
   end
