@@ -18,34 +18,34 @@ require 'safe_active_record/safe_query_manager'
 require 'set'
 
 module SafeActiveRecord
-  @@visited = Set.new
+  @visited = Set.new
+  @gemlist = Set.new
 
-  def self.init_visited()
-    @@visited.merge($LOADED_FEATURES) if $LOADED_FEATURES.is_a? Enumerable
+  def self.init_visited
+    @visited.merge($LOADED_FEATURES) if $LOADED_FEATURES.is_a? Enumerable
+    # Usually gem path starts with the gem name, exceptions incl. google gems
+    @gemlist.merge(Gem::Specification.map { |g| g.name.start_with?('google-') ? 'google' : g.name })
   end
 
   def self.skip_symbols_diff(args, method)
     if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
       # Load is mainly used for development to reload code without restarting the app
-      return true if @@visited.include?(args[0]) && method == "require"
+      return true if @visited.include?(args[0]) && method == 'require'
 
-      # We don't need to process gems as SAR ignore SQL statements made from them
+      # We don't need to process gems as SAR ignore SQL statements made in them
       return true if args[0].start_with?(Gem.dir)
 
-      # A gem is less likely to call the app source code without using absolute paths
-      caller_locations_path = caller_locations[1].absolute_path || caller_locations[2].path
-      if (caller_locations_path.start_with?(Gem.dir) && !args[0].start_with?("/"))
-        return true
-      end
+      start_path = args[0].split('/', 2)[0]
+      return true if !start_path.nil? && !start_path.empty? && @gemlist.include?(start_path)
     end
-    return false
+    false
   end
 
   def self.visit(args, method)
-    return if method == "load"
-    if args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
-      @@visited.add(args[0])
-    end
+    return if method == 'load'
+    return unless args.instance_of?(Array) && args.size == 1 && args[0].instance_of?(String)
+
+    @visited.add(args[0])
   end
 
   def self.apply_load_patch(safe_query_mgr)
@@ -65,21 +65,21 @@ module SafeActiveRecord
           undef_method original_method
 
           define_method original_method do |*args|
-            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(args, "#{original_method}")
+            if safe_query_mgr.activated? && safe_query_mgr.intercept_load? && !SafeActiveRecord.skip_symbols_diff(args, original_method.to_s)
               pre_symbols = Symbol.all_symbols
 
               result = method(:"safe_ar_original_#{original_method}").call(*args)
 
               if result
                 post_symbols = Symbol.all_symbols
-                if post_symbols[pre_symbols.size - 1] == pre_symbols[-1]
-                  delta = post_symbols[pre_symbols.size...]
-                else
-                  delta = post_symbols - pre_symbols
-                end
+                delta = if post_symbols[pre_symbols.size - 1] == pre_symbols[-1]
+                          post_symbols[pre_symbols.size...]
+                        else
+                          post_symbols - pre_symbols
+                        end
                 safe_query_mgr.add_safe_queries delta if delta.is_a? Enumerable
               end
-              SafeActiveRecord.visit(args, "#{original_method}")
+              SafeActiveRecord.visit(args, original_method.to_s)
             else
               result = method(:"safe_ar_original_#{original_method}").call(*args)
             end
@@ -92,7 +92,7 @@ module SafeActiveRecord
     apply_patch.call(:require)
     apply_patch.call(:load)
 
-    # Kernel.reqiure_relative needs special treatment due to relative path rebase.
+    # Kernel.require_relative needs special treatment due to relative path rebase.
     unless Kernel.private_method_defined? :safe_ar_original_require_relative
       Kernel.module_eval do
         alias_method :safe_ar_original_require_relative, :require_relative
@@ -109,14 +109,8 @@ module SafeActiveRecord
           # decorated.
 
           abspath = "#{abspath}.rb" unless File.exist?(abspath)
-          begin
-            require(File.realpath(abspath))
-          rescue
-            # TODO: fix this
-            abspath = File.expand_path(path, base)
-            abspath = "#{abspath}.so" unless File.exist?(abspath)
-            require(File.realpath(abspath))
-          end
+          abspath = "#{abspath[...-3]}.so" unless File.exist?(abspath)
+          require(File.realpath(abspath))
         end
       end
     end

@@ -63,9 +63,9 @@ module SafeActiveRecord
 
       end
 
-      # Add the current loaded dependencies to the visited global set
-      # This prevent intercept load to unprocess the symbole table for them
-      SafeActiveRecord.init_visited()
+      # Add the current loaded dependencies to the visited global set to improve
+      # intercept load performance
+      SafeActiveRecord.init_visited if @options[:intercept_load]
 
       add_safe_queries Symbol.all_symbols
 

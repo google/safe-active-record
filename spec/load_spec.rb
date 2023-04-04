@@ -89,6 +89,14 @@ describe 'monkey patch Kernel.require load and requrie_relative,' do
       expect(mgr.safe_query?('relative load static query 1'.to_sym)).to be true
     end
 
+    it 'allows loading relative .so files' do
+      mgr = SafeActiveRecord::SafeQueryManager.new
+      SafeActiveRecord.apply_load_patch(mgr)
+      mgr.activate!({ intercept_load: true })
+
+      expect { require_relative('loaded_6') }.to raise_error(LoadError)
+    end
+
     after(:each) do
       remove_load_patch
     end
