@@ -22,7 +22,14 @@ module SafeActiveRecord
   @gemlist = Set.new
 
   def self.init_visited
-    @visited.merge($LOADED_FEATURES) if $LOADED_FEATURES.is_a? Enumerable
+    if $LOADED_FEATURES.is_a? Enumerable
+      @visited.merge($LOADED_FEATURES)
+      # Also merge the relative imported paths
+      $LOADED_FEATURES.each do |path|
+        $LOAD_PATH.each{ |start_path| @visited.add(path[start_path.size+1..-4]) if path.start_with?(start_path)}
+      end
+    end
+
     # Usually gem path starts with the gem name, exceptions incl. google gems
     @gemlist.merge(Gem::Specification.map { |g| g.name.start_with?('google-') ? 'google' : g.name })
   end
