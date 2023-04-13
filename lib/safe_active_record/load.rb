@@ -26,6 +26,7 @@ module SafeActiveRecord
       @visited.merge($LOADED_FEATURES)
       # Also merge the relative imported paths
       $LOADED_FEATURES.each do |path|
+        # Add the relative path to the visited set, removing the base path from LOAD_PATH and the file extension
         $LOAD_PATH.each{ |start_path| @visited.add(path[start_path.size+1..-4]) if path.start_with?(start_path)}
       end
     end
@@ -79,6 +80,9 @@ module SafeActiveRecord
 
               if result
                 post_symbols = Symbol.all_symbols
+                # If the last symbol of the pre table is the same in the post table, this means only additions happened
+                # (no symbol deletion), so we can get the delta by slicing the post-table using the pre-table size as lower
+                # boundary
                 delta = if post_symbols[pre_symbols.size - 1] == pre_symbols[-1]
                           post_symbols[pre_symbols.size...]
                         else
