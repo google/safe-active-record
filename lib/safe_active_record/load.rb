@@ -32,6 +32,7 @@ module SafeActiveRecord
     end
 
     # Usually gem path starts with the gem name, exceptions incl. google gems
+    # TODO: find a better way to do this without hardcoding specific use-cases
     @gemlist.merge(Gem::Specification.map { |g| g.name.start_with?('google-') ? 'google' : g.name })
   end
 
