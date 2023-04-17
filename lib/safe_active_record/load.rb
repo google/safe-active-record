@@ -27,7 +27,7 @@ module SafeActiveRecord
       # Also merge the relative imported paths
       $LOADED_FEATURES.each do |path|
         # Add the relative path to the visited set, removing the base path from LOAD_PATH and the file extension
-        $LOAD_PATH.each{ |start_path| @visited.add(path[start_path.size+1..-4]) if path.start_with?(start_path)}
+        $LOAD_PATH.each { |start_path| @visited.add(path[start_path.size + 1..-4]) if path.start_with?(start_path) }
       end
     end
 
@@ -120,6 +120,7 @@ module SafeActiveRecord
           # No need to calculate the delta of symbol since `require` is already
           # decorated.
 
+          # Both .rb and .so files can be imported. C extentions use .so files for example.
           abspath = "#{abspath}.rb" unless File.exist?(abspath)
           abspath = "#{abspath[...-3]}.so" unless File.exist?(abspath)
           require(File.realpath(abspath))
