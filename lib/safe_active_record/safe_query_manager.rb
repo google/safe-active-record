@@ -63,6 +63,10 @@ module SafeActiveRecord
 
       end
 
+      # Add the current loaded dependencies to the visited global set to improve
+      # intercept load performance
+      SafeActiveRecord.init_visited if @options[:intercept_load]
+
       add_safe_queries Symbol.all_symbols
 
       @safe_queries.freeze unless @options[:intercept_load]
