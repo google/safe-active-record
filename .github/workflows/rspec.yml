@@ -1,0 +1,21 @@
+name: Run RSpec tests
+on: [push, pull_request]
+jobs:
+  run-rspec-tests:
+    strategy:
+      matrix:
+        version: ['7.0', '6.0']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true  # Runs 'bundle install' and caches installed gems automatically
+      - name: Remove the default activerecord Gem
+        run: bundle remove activerecord
+      - name: Add a specific version of the activerecord Gem
+        run: bundle add activerecord --version "~> ${{ matrix.version }}" --group "development,test"
+      - name: Run tests
+        run: ./run_tests.sh
