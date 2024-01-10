@@ -17,9 +17,9 @@
 Gem::Specification.new do |s|
   s.name        = 'safe_active_record'
   s.version     = '0.1.0'
-  s.summary     = 'Safe Active Rercord against SQLi!'
-  s.description = 'A shim Gem to enforce "constant literals" to Active Record query APIs to defend against SQLi.'
-  s.authors     = ['Shuyang Wang', 'Sam Marder']
+  s.summary     = 'Security middleware to defend against SQL injection in Active Record.'
+  s.description = s.summary
+  s.authors     = ['Shuyang Wang', 'Sam Marder', 'Camille Schneider']
   s.files       = Dir['lib/**/*.rb']
   s.license     = 'Apache-2.0'
   s.metadata['rubygems_mfa_required'] = 'true'
