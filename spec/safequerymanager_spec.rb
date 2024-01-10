@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'safe_active_record/load'
 require 'safe_active_record/safe_query_manager'
 
 describe SafeActiveRecord::SafeQueryManager do
