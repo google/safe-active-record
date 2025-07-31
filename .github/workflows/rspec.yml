@@ -4,7 +4,7 @@ jobs:
   run-rspec-tests:
     strategy:
       matrix:
-        version: ['7.0', '6.0']
+        version: ['7.2', '7.0', '6.0']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
