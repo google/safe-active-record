@@ -150,10 +150,16 @@ module Arel
     alias safe_ar_original_sql sql
 
     # sql takes in arguments of TrustedSymbol or UncheckedString type.
-    def sql(raw_sql)
-      raw_sql = SafeActiveRecord.check_arg(raw_sql, 0)
+    def sql(sql_string, *positional_binds, retryable: false, **named_binds)
+      raw_sql = SafeActiveRecord.check_arg(sql_string, 0)
 
-      safe_ar_original_sql(raw_sql)
+      if defined?(ActiveRecord::VERSION) &&
+         Gem::Version.new(ActiveRecord::VERSION::STRING) >= Gem::Version.new('7.2.0')
+        # If the version is >= 7.2.0, pass the `retryable` parameter.
+        safe_ar_original_sql(raw_sql, *positional_binds, retryable: retryable, **named_binds)
+      else
+        safe_ar_original_sql(raw_sql, *positional_binds, **named_binds)
+      end
     end
   end
 end
